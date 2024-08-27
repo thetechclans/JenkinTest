@@ -23,9 +23,19 @@ pipeline {
             steps {
                 script {
                     try {
-                        sh 'docker rm -f $(docker ps -a -q)'
+                        // Get the list of running container IDs
+                        def runningContainers = sh(script: 'docker ps -q', returnStdout: true).trim()
+
+                        echo 'runningContainers: ' + runningContainers
+                        // Check if there are any running containers
+                        // if (runningContainers) {
+                        //     // Remove the running containers
+                        //     //sh "docker rm -f ${runningContainers}"
+                        // } else {
+                        //     echo 'No running containers to clear up...'
+                        // }
                     } catch (Exception e) {
-                        echo 'No running container to clear up...'
+                        echo 'Failed to clear running containers: ' + e.message
                     }
                 }
             }

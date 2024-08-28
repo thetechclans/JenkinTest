@@ -27,8 +27,6 @@ pipeline {
         stage('Docker Compose up') {
             steps {
                  script {
-                    // Remove existing conflicting container if it exists
-                    sh 'docker ps -a --filter "name=my-laravel-mysql" --format "{{.ID}}" | xargs -r docker rm -f'
                     // Start the containers
                     sh 'docker-compose up -d'
                 }

@@ -4,8 +4,8 @@ pipeline {
     environment {
         // Define environment variables
         DOCKER_IMAGE = "laravel-app"
-        DOCKER_REGISTRY_CREDENTIALS = 'dockerhub-credentials' // ID for Docker Hub credentials in Jenkins
-        DOCKER_REPO = 'yourdockerhubusername/laravel-app'
+        DOCKER_REGISTRY_CREDENTIALS = 'Rilan_ksa' // ID for Docker Hub credentials in Jenkins
+        // DOCKER_REPO = 'yourdockerhubusername/laravel-app'
     }
 
     stages {

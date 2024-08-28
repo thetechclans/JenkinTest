@@ -1,81 +1,54 @@
 pipeline {
     agent any
+
+    environment {
+        // Define environment variables
+        DOCKER_IMAGE = "laravel-app"
+        DOCKER_REGISTRY_CREDENTIALS = 'Rilan_ksa' // ID for Docker Hub credentials in Jenkins
+        // DOCKER_REPO = 'yourdockerhubusername/laravel-app'
+    }
+
     stages {
-        stage("Verify tooling") {
+        stage('Checkout') {
             steps {
-                sh '''
-                    docker info
-                    docker version
-                    docker compose version
-                '''
+                // Clone the repository
+                sh 'pwd'
+                // git branch: '11.x', url: 'https://github.com/thetechclans/JenkinTest.git'
             }
         }
-        // stage("Verify SSH connection to server") {
-        //     steps {
-        //         sshagent(credentials: ['aws-ec2']) {
-        //             sh '''
-        //                 ssh -o StrictHostKeyChecking=no ec2-user@13.40.116.143 whoami
-        //             '''
-        //         }
-        //     }
-        // }
-        stage("Clear all running docker containers") {
+        stage('Build Docker Compose Image') {
             steps {
                 script {
-                    try {
-                        sh 'docker rm -f $(docker ps -a -q)'
-                    } catch (Exception e) {
-                        echo 'No running container to clear up...'
-                    }
+                    // Build the Docker image
+                    sh 'docker-compose build'
                 }
             }
         }
-        stage("Start Docker") {
+        stage('Docker Compose up') {
             steps {
-                sh 'make up'
-                sh 'docker compose ps'
+                script {
+                    sh "docker-compose up -d"
+                }
             }
         }
-        stage("Run Composer Install") {
-            steps {
-                sh 'docker compose run --rm composer install'
-            }
-        }
-        // stage("Populate .env file") {
+        // stage('Push Docker Image') {
         //     steps {
-        //         dir("/var/lib/jenkins/workspace/envs/laravel-test") {
-        //             fileOperations([fileCopyOperation(excludes: '', flattenFiles: true, includes: '.env', targetLocation: "${WORKSPACE}")])
+        //         script {
+        //             // Tag the Docker image
+        //             sh "docker tag $DOCKER_IMAGE $DOCKER_REPO:latest"
+        //             // Push the Docker image to Docker Hub
+        //             sh "docker push $DOCKER_REPO:latest"
         //         }
         //     }
         // }
-        stage("Run Tests") {
-            steps {
-                sh 'docker compose run --rm artisan test'
-            }
-        }
     }
+
     post {
-        // success {
-    //         sh 'cd "/var/lib/jenkins/workspace/LaravelTest"'
-    //         sh 'rm -rf artifact.zip'
-    //         sh 'zip -r artifact.zip . -x "*node_modules**"'
-    //         withCredentials([sshUserPrivateKey(credentialsId: "aws-ec2", keyFileVariable: 'keyfile')]) {
-    //             sh 'scp -v -o StrictHostKeyChecking=no -i ${keyfile} /var/lib/jenkins/workspace/LaravelTest/artifact.zip ec2-user@13.40.116.143:/home/ec2-user/artifact'
-    //         }
-    //         sshagent(credentials: ['aws-ec2']) {
-    //             sh 'ssh -o StrictHostKeyChecking=no ec2-user@13.40.116.143 unzip -o /home/ec2-user/artifact/artifact.zip -d /var/www/html'
-    //             script {
-    //                 try {
-    //                     sh 'ssh -o StrictHostKeyChecking=no ec2-user@13.40.116.143 sudo chmod 777 /var/www/html/storage -R'
-    //                 } catch (Exception e) {
-    //                     echo 'Some file permissions could not be updated.'
-    //                 }
-    //             }
-    //         }
-    //     }
-        always {
-            sh 'docker compose down --remove-orphans -v'
-            sh 'docker compose ps'
+        success {
+            echo 'Deployment successful!'
+        }
+        failure {
+            echo 'Deployment failed!'
         }
     }
 }

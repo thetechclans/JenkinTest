@@ -12,57 +12,37 @@ pipeline {
         stage('Checkout') {
             steps {
                 // Clone the repository
-                git branch: 'main', url: 'https://github.com/yourusername/your-laravel-repo.git'
+                git branch: '11.x', url: 'https://github.com/thetechclans/JenkinTest.git'
             }
         }
-        stage('Build Docker Image') {
+        stage('Build Docker Compose Image') {
             steps {
                 script {
                     // Build the Docker image
-                    sh 'docker build -t $DOCKER_IMAGE .'
+                    sh 'docker-compose build'
                 }
             }
         }
-        stage('Docker Login') {
+        stage('Docker Compose up') {
             steps {
                 script {
-                    // Log in to Docker Hub
-                    sh "echo $DOCKER_REGISTRY_CREDENTIALS | docker login -u yourdockerhubusername --password-stdin"
+                    sh "docker-compose up -d"
                 }
             }
         }
-        stage('Push Docker Image') {
-            steps {
-                script {
-                    // Tag the Docker image
-                    sh "docker tag $DOCKER_IMAGE $DOCKER_REPO:latest"
-                    // Push the Docker image to Docker Hub
-                    sh "docker push $DOCKER_REPO:latest"
-                }
-            }
-        }
-        stage('Deploy to Server') {
-            steps {
-                // Deploy the image to the server
-                sshagent(['your-server-ssh-credentials-id']) {
-                    sh '''
-                    ssh user@yourserver.com '
-                        docker pull $DOCKER_REPO:latest &&
-                        docker stop laravel-app || true &&
-                        docker rm laravel-app || true &&
-                        docker run -d --name laravel-app -p 9000:9000 $DOCKER_REPO:latest
-                    '
-                    '''
-                }
-            }
-        }
+        // stage('Push Docker Image') {
+        //     steps {
+        //         script {
+        //             // Tag the Docker image
+        //             sh "docker tag $DOCKER_IMAGE $DOCKER_REPO:latest"
+        //             // Push the Docker image to Docker Hub
+        //             sh "docker push $DOCKER_REPO:latest"
+        //         }
+        //     }
+        // }
     }
 
     post {
-        always {
-            // Clean up Docker images
-            sh 'docker rmi $DOCKER_REPO:latest || true'
-        }
         success {
             echo 'Deployment successful!'
         }

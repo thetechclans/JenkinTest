@@ -11,7 +11,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                // Clone the repository
+                checkout scm
                 sh 'pwd'
                 // git branch: '11.x', url: 'https://github.com/thetechclans/JenkinTest.git'
             }
@@ -26,21 +26,14 @@ pipeline {
         }
         stage('Docker Compose up') {
             steps {
-                script {
-                    sh "docker-compose up -d"
+                 script {
+                    // Remove existing conflicting container if it exists
+                    sh 'docker ps -a --filter "name=my-laravel-mysql" --format "{{.ID}}" | xargs -r docker rm -f'
+                    // Start the containers
+                    sh 'docker-compose up -d'
                 }
             }
         }
-        // stage('Push Docker Image') {
-        //     steps {
-        //         script {
-        //             // Tag the Docker image
-        //             sh "docker tag $DOCKER_IMAGE $DOCKER_REPO:latest"
-        //             // Push the Docker image to Docker Hub
-        //             sh "docker push $DOCKER_REPO:latest"
-        //         }
-        //     }
-        // }
     }
 
     post {

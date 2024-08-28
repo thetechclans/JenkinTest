@@ -13,7 +13,7 @@ pipeline {
             steps {
                 checkout scm
                 sh 'pwd'
-                // git branch: '11.x', url: 'https://github.com/thetechclans/JenkinTest.git'
+                git branch: 'Jenkins', url: 'https://github.com/thetechclans/JenkinTest.git'
             }
         }
         stage('Build Docker Compose Image') {

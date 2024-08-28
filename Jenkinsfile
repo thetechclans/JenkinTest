@@ -1,91 +1,73 @@
 pipeline {
     agent any
+
+    environment {
+        // Define environment variables
+        DOCKER_IMAGE = "laravel-app"
+        DOCKER_REGISTRY_CREDENTIALS = 'dockerhub-credentials' // ID for Docker Hub credentials in Jenkins
+        DOCKER_REPO = 'yourdockerhubusername/laravel-app'
+    }
+
     stages {
-        stage("Verify tooling") {
+        stage('Checkout') {
             steps {
-                sh '''
-                    docker info
-                    docker version
-                    docker compose version || docker-compose --version
-                '''
+                // Clone the repository
+                git branch: 'main', url: 'https://github.com/yourusername/your-laravel-repo.git'
             }
         }
-        // stage("Verify SSH connection to server") {
-        //     steps {
-        //         sshagent(credentials: ['aws-ec2']) {
-        //             sh '''
-        //                 ssh -o StrictHostKeyChecking=no ec2-user@13.40.116.143 whoami
-        //             '''
-        //         }
-        //     }
-        // }
-        stage("Clear all running docker containers") {
+        stage('Build Docker Image') {
             steps {
                 script {
-                    try {
-                        // Get the list of running container IDs
-                        def runningContainers = sh(script: 'docker ps -q', returnStdout: true).trim()
-
-                        echo 'runningContainers: ' + runningContainers
-                        // Check if there are any running containers
-                        // if (runningContainers) {
-                        //     // Remove the running containers
-                        //     //sh "docker rm -f ${runningContainers}"
-                        // } else {
-                        //     echo 'No running containers to clear up...'
-                        // }
-                    } catch (Exception e) {
-                        echo 'Failed to clear running containers: ' + e.message
-                    }
+                    // Build the Docker image
+                    sh 'docker build -t $DOCKER_IMAGE .'
                 }
             }
         }
-        stage("Start Docker") {
+        stage('Docker Login') {
             steps {
-                sh 'make up'
-                sh 'docker compose ps'
+                script {
+                    // Log in to Docker Hub
+                    sh "echo $DOCKER_REGISTRY_CREDENTIALS | docker login -u yourdockerhubusername --password-stdin"
+                }
             }
         }
-        stage("Run Composer Install") {
+        stage('Push Docker Image') {
             steps {
-                sh 'docker compose run --rm composer install'
+                script {
+                    // Tag the Docker image
+                    sh "docker tag $DOCKER_IMAGE $DOCKER_REPO:latest"
+                    // Push the Docker image to Docker Hub
+                    sh "docker push $DOCKER_REPO:latest"
+                }
             }
         }
-        // stage("Populate .env file") {
-        //     steps {
-        //         dir("/var/lib/jenkins/workspace/envs/laravel-test") {
-        //             fileOperations([fileCopyOperation(excludes: '', flattenFiles: true, includes: '.env', targetLocation: "${WORKSPACE}")])
-        //         }
-        //     }
-        // }
-        stage("Run Tests") {
+        stage('Deploy to Server') {
             steps {
-                sh 'docker compose run --rm artisan test'
+                // Deploy the image to the server
+                sshagent(['your-server-ssh-credentials-id']) {
+                    sh '''
+                    ssh user@yourserver.com '
+                        docker pull $DOCKER_REPO:latest &&
+                        docker stop laravel-app || true &&
+                        docker rm laravel-app || true &&
+                        docker run -d --name laravel-app -p 9000:9000 $DOCKER_REPO:latest
+                    '
+                    '''
+                }
             }
         }
     }
+
     post {
-        // success {
-    //         sh 'cd "/var/lib/jenkins/workspace/LaravelTest"'
-    //         sh 'rm -rf artifact.zip'
-    //         sh 'zip -r artifact.zip . -x "*node_modules**"'
-    //         withCredentials([sshUserPrivateKey(credentialsId: "aws-ec2", keyFileVariable: 'keyfile')]) {
-    //             sh 'scp -v -o StrictHostKeyChecking=no -i ${keyfile} /var/lib/jenkins/workspace/LaravelTest/artifact.zip ec2-user@13.40.116.143:/home/ec2-user/artifact'
-    //         }
-    //         sshagent(credentials: ['aws-ec2']) {
-    //             sh 'ssh -o StrictHostKeyChecking=no ec2-user@13.40.116.143 unzip -o /home/ec2-user/artifact/artifact.zip -d /var/www/html'
-    //             script {
-    //                 try {
-    //                     sh 'ssh -o StrictHostKeyChecking=no ec2-user@13.40.116.143 sudo chmod 777 /var/www/html/storage -R'
-    //                 } catch (Exception e) {
-    //                     echo 'Some file permissions could not be updated.'
-    //                 }
-    //             }
-    //         }
-    //     }
         always {
-            sh 'docker compose down --remove-orphans -v'
-            sh 'docker compose ps'
+            // Clean up Docker images
+            sh 'docker rmi $DOCKER_REPO:latest || true'
+        }
+        success {
+            echo 'Deployment successful!'
+        }
+        failure {
+            echo 'Deployment failed!'
         }
     }
 }

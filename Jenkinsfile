@@ -12,7 +12,8 @@ pipeline {
         stage('Checkout') {
             steps {
                 // Clone the repository
-                git branch: '11.x', url: 'https://github.com/thetechclans/JenkinTest.git'
+                sh 'pwd'
+                // git branch: '11.x', url: 'https://github.com/thetechclans/JenkinTest.git'
             }
         }
         stage('Build Docker Compose Image') {

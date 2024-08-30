@@ -13,8 +13,8 @@ pipeline {
             steps {
                 // Clone the repository
                 sh 'pwd'
-                git branch: 'Jenkins', url: 'https://github.com/thetechclans/JenkinTest.git',
-                    credentialsId: 'Rilan_ksa'
+                // git branch: 'Jenkins', url: 'https://github.com/thetechclans/JenkinTest.git',
+                //     credentialsId: 'Rilan_ksa'
             }
         }
 

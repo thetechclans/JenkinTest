@@ -12,6 +12,7 @@ class Payment extends Controller
      */
     public function index()
     {
+        echo('Welcome Screen here');
         return view('welcome');
     }
 

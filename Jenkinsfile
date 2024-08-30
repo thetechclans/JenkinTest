@@ -37,13 +37,13 @@ pipeline {
         //     }
         // }
 
-        
+
         stage('Build Docker Compose Image') {
             steps {
                 script {
                     // Check if the container already exists
                     def containerExists = sh(script: "docker ps -a --filter 'name=${DOCKER_IMAGE}' --format '{{.Names}}' | grep -w ${DOCKER_IMAGE}", returnStatus: true) == 0
-                    
+
                     // Skip build if container exists
                     if (containerExists) {
                         echo "Container '${DOCKER_IMAGE}' already exists. Skipping build."
@@ -62,6 +62,15 @@ pipeline {
                 }
             }
         }
+
+        stage('Docker php Compose update') {
+            steps {
+                script {
+                    sh "docker compose run php composer install"
+                }
+            }
+        }
+
     }
 
     post {

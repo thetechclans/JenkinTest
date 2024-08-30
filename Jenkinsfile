@@ -11,24 +11,56 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                checkout scm
+                // Clone the repository
                 sh 'pwd'
-                git branch: 'Jenkins', url: 'https://github.com/thetechclans/JenkinTest.git'
+                // git branch: 'main', url: 'https://github.com/thetechclans/JenkinTest.git',
+                //     credentialsId: 'Rilan_ksa',
+                //     changelog: false,
+                //     poll: false
             }
         }
+
+        // stage('Show Updated Files') {
+        //     steps {
+        //         script {
+        //             def changes = sh(script: 'git rev-parse --is-inside-work-tree', returnStatus: true)
+        //             if (changes == 0) {
+        //                 sh 'echo "Updated files since the last build:"'
+        //                 def previousCommit = sh(script: 'git rev-list --max-parents=0 HEAD', returnStdout: true).trim()
+        //                 if (previousCommit) {
+        //                     sh 'git diff --name-only ${previousCommit} HEAD'
+        //                 } else {
+        //                     echo 'No previous commits to compare with.'
+        //                 }
+        //             } else {
+        //                 echo 'Not inside a Git repository.'
+        //             }
+        //         }
+        //     }
+        // }
+
+        
         stage('Build Docker Compose Image') {
             steps {
                 script {
-                    // Build the Docker image
-                    sh 'docker-compose build'
+                    // Check if the container already exists
+                    def containerExists = sh(script: "docker ps -a --filter 'name=${DOCKER_IMAGE}' --format '{{.Names}}' | grep -w ${DOCKER_IMAGE}", returnStatus: true) == 0
+                    
+                    // Skip build if container exists
+                    if (containerExists) {
+                        echo "Container '${DOCKER_IMAGE}' already exists. Skipping build."
+                    } else {
+                        echo "Container '${DOCKER_IMAGE}' does not exist. Building Docker image."
+                        // Build the Docker image
+                        sh 'docker-compose build'
+                    }
                 }
             }
         }
         stage('Docker Compose up') {
             steps {
-                 script {
-                    // Start the containers
-                    sh 'docker-compose up -d'
+                script {
+                    sh "docker-compose up -d"
                 }
             }
         }

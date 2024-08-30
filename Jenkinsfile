@@ -13,7 +13,7 @@ pipeline {
             steps {
                 // Clone the repository
                 sh 'pwd'
-                git branch: 'Jenkinsfile', url: 'https://github.com/thetechclans/JenkinTest.git',
+                git branch: 'main', url: 'https://github.com/thetechclans/JenkinTest.git',
                     changelog: false,
                     poll: false
             }

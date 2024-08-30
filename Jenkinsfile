@@ -13,10 +13,10 @@ pipeline {
             steps {
                 // Clone the repository
                 sh 'pwd'
-                // git branch: 'main', url: 'https://github.com/thetechclans/JenkinTest.git',
-                //     credentialsId: 'Rilan_ksa',
-                //     changelog: false,
-                //     poll: false
+                git branch: 'main', url: 'https://github.com/thetechclans/JenkinTest.git',
+                    credentialsId: 'Rilan_ksa',
+                    changelog: false,
+                    poll: false
             }
         }
 

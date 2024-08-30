@@ -68,6 +68,7 @@ pipeline {
                 script {
                     def containerStatus = sh(script: 'docker-compose ps -q app | xargs docker inspect -f "{{.State.Status}}"', returnStdout: true).trim()
                     if (containerStatus == 'running') {
+                        sh 'docker-compose exec -T app composer config --global process-timeout 600'
                         sh 'docker-compose exec -T app composer update'
                     } else {
                         error "Service 'app' is not running"

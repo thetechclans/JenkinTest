@@ -22,12 +22,22 @@ pipeline {
         stage('Show Updated Files') {
             steps {
                 script {
-                    // Print the updated files since the last commit
-                    sh 'echo "Updated files since the last build:"'
-                    sh 'git diff --name-only HEAD^ HEAD'
+                    def changes = sh(script: 'git rev-parse --is-inside-work-tree', returnStatus: true)
+                    if (changes == 0) {
+                        sh 'echo "Updated files since the last build:"'
+                        def previousCommit = sh(script: 'git rev-list --max-parents=0 HEAD', returnStdout: true).trim()
+                        if (previousCommit) {
+                            sh 'git diff --name-only ${previousCommit} HEAD'
+                        } else {
+                            echo 'No previous commits to compare with.'
+                        }
+                    } else {
+                        echo 'Not inside a Git repository.'
+                    }
                 }
             }
         }
+
         
         stage('Build Docker Compose Image') {
             steps {

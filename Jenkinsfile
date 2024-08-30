@@ -13,11 +13,22 @@ pipeline {
             steps {
                 // Clone the repository
                 sh 'pwd'
-                git branch: '11.x', url: 'https://github.com/thetechclans/JenkinTest.git',
+                git branch: 'Jenkinsfile', url: 'https://github.com/thetechclans/JenkinTest.git',
                     changelog: false,
                     poll: false
             }
         }
+
+        stage('Show Updated Files') {
+            steps {
+                script {
+                    // Print the updated files since the last commit
+                    sh 'echo "Updated files since the last build:"'
+                    sh 'git diff --name-only HEAD^ HEAD'
+                }
+            }
+        }
+        
         stage('Build Docker Compose Image') {
             steps {
                 script {

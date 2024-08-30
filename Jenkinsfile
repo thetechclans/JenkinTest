@@ -13,14 +13,25 @@ pipeline {
             steps {
                 // Clone the repository
                 sh 'pwd'
-                // git branch: '11.x', url: 'https://github.com/thetechclans/JenkinTest.git'
+                git branch: '11.x', url: 'https://github.com/thetechclans/JenkinTest.git',
+                    changelog: false,
+                    poll: false
             }
         }
         stage('Build Docker Compose Image') {
             steps {
                 script {
-                    // Build the Docker image
-                    sh 'docker-compose build'
+                    // Check if the container already exists
+                    def containerExists = sh(script: "docker ps -a --filter 'name=${DOCKER_IMAGE}' --format '{{.Names}}' | grep -w ${DOCKER_IMAGE}", returnStatus: true) == 0
+                    
+                    // Skip build if container exists
+                    if (containerExists) {
+                        echo "Container '${DOCKER_IMAGE}' already exists. Skipping build."
+                    } else {
+                        echo "Container '${DOCKER_IMAGE}' does not exist. Building Docker image."
+                        // Build the Docker image
+                        sh 'docker-compose build'
+                    }
                 }
             }
         }
@@ -31,16 +42,6 @@ pipeline {
                 }
             }
         }
-        // stage('Push Docker Image') {
-        //     steps {
-        //         script {
-        //             // Tag the Docker image
-        //             sh "docker tag $DOCKER_IMAGE $DOCKER_REPO:latest"
-        //             // Push the Docker image to Docker Hub
-        //             sh "docker push $DOCKER_REPO:latest"
-        //         }
-        //     }
-        // }
     }
 
     post {

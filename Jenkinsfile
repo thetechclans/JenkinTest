@@ -66,7 +66,8 @@ pipeline {
         stage('Docker php Compose update') {
             steps {
                 script {
-                    sh "docker compose run php composer install"
+                    sh "docker-compose exec my-laravel-app composer update
+"
                 }
             }
         }

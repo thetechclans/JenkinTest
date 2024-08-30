@@ -66,11 +66,15 @@ pipeline {
         stage('Docker php Compose update') {
             steps {
                 script {
-                    sh "docker-compose exec my-laravel-app composer update"
+                    def containerStatus = sh(script: 'docker-compose ps -q app | xargs docker inspect -f "{{.State.Status}}"', returnStdout: true).trim()
+                    if (containerStatus == 'running') {
+                        sh 'docker-compose exec -T app composer update'
+                    } else {
+                        error "Service 'app' is not running"
+                    }
                 }
             }
         }
-
     }
 
     post {
